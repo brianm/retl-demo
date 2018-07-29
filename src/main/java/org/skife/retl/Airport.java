@@ -5,12 +5,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.github.davidmoten.rtree.geometry.Geometries;
 import com.github.davidmoten.rtree.geometry.Point;
-import com.google.common.io.Resources;
 import io.vavr.Tuple2;
 import org.immutables.value.Value;
-import org.tukaani.xz.XZInputStream;
 import rx.Observable;
 import rx.Observer;
 import rx.observables.SyncOnSubscribe;
@@ -27,15 +24,19 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 public interface Airport {
 
     String name();
+
     String iata();
+
     String city();
-    String icao();
+
+    String country();
 
     float latitude();
+
     float longitude();
 
     default Point point() {
-        return Geometries.pointGeographic(longitude(), latitude());
+        return Geodetic.latLong(latitude(), longitude());
     }
 
     static Observable<Airport> loadKnownAirports() {
@@ -44,34 +45,19 @@ public interface Airport {
             protected Tuple2<AutoCloseable, Iterator<Airport>> generateState() {
                 try {
                     CsvSchema schema = CsvSchema.builder()
-                                                .setEscapeChar('\\')
-                                                .addColumn("airportId")
-                                                .addColumn("name")
-                                                .addColumn("city")
-                                                .addColumn("country")
-                                                .addColumn("iata")
-                                                .addColumn("icao")
-                                                .addColumn("latitude")
-                                                .addColumn("longitude")
-                                                .addColumn("altitude")
-                                                .addColumn("timezoneOffset")
-                                                .addColumn("dst")
-                                                .addColumn("timezoneName")
-                                                .addColumn("type")
-                                                .addColumn("source")
+                                                .setUseHeader(true)
                                                 .build();
 
                     ObjectReader mapper = new CsvMapper().disable(FAIL_ON_UNKNOWN_PROPERTIES)
                                                          .readerFor(Airport.class)
                                                          .with(schema);
 
-                    InputStream in = new XZInputStream(Resources.getResource("airports.dat.xz")
-                                                                .openStream());
+                    InputStream in = Airport.class.getResourceAsStream("/airports.csv");
                     Iterator<Airport> itty = mapper.readValues(in);
                     return new Tuple2<>(in, itty);
 
                 } catch (IOException e) {
-                    throw new IllegalStateException("unable to loadKnownAirports airports.dat.xz from classpath", e);
+                    throw new IllegalStateException("unable to loadKnownAirports airports.csv from classpath", e);
                 }
             }
 
@@ -95,7 +81,7 @@ public interface Airport {
                     throw new IllegalStateException(e);
                 }
             }
-        }).filter(a -> a.iata().length() == 3); // strip non-iata airports
+        });
     }
 
 }

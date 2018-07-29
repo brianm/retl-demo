@@ -9,6 +9,7 @@ import net.jqwik.api.Combinators;
 import net.jqwik.api.arbitraries.FloatArbitrary;
 import net.jqwik.api.providers.ArbitraryProvider;
 import net.jqwik.api.providers.TypeUsage;
+import org.skife.retl.Geodetic;
 
 import java.util.Collections;
 import java.util.Set;
@@ -24,6 +25,6 @@ public class PointProvider implements ArbitraryProvider {
     public Set<Arbitrary<?>> provideFor(TypeUsage targetType, SubtypeProvider subtypeProvider) {
         FloatArbitrary lats = Arbitraries.floats().between(-90f, 90f);
         FloatArbitrary lons = Arbitraries.floats().between(-180f, 180f);
-        return Collections.singleton(Combinators.combine(lats, lons).as(Geometries::pointGeographic));
+        return Collections.singleton(Combinators.combine(lats, lons).as(Geodetic::latLong));
     }
 }
