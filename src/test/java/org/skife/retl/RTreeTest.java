@@ -42,8 +42,7 @@ public class RTreeTest {
                                .first()
                                .value();
 
-        assertThat(nearest).isNotNull()
-                           .hasFieldOrPropertyWithValue("iata", "BFI");
+        assertThat(nearest).hasFieldOrPropertyWithValue("iata", "BFI");
     }
 
     @Example
@@ -53,8 +52,7 @@ public class RTreeTest {
                                .first()
                                .value();
 
-        assertThat(nearest).isNotNull()
-                           .hasFieldOrPropertyWithValue("iata", "BLR");
+        assertThat(nearest).hasFieldOrPropertyWithValue("iata", "BLR");
     }
 
     @Property
@@ -78,17 +76,6 @@ public class RTreeTest {
                                                         .toBlocking()
                                                         .toIterable());
         List<Airport> expected = bruteForceHaversineNearest(p, maxDistance, count);
-
-        System.out.printf("for lat,lon %f,%f", p.y(), p.x());
-        nearest.forEach(a -> System.out.printf("actual %s\thaversine=%f\tgeodetic=%f",
-                                               a.iata(),
-                                               Earth.distance(SEA_OFFICE, a.point()),
-                                               SEA_OFFICE.distance(a.point())));
-        expected.forEach(a -> System.out.printf("expect %s\thaversine=%f\tgeodetic=%f\n",
-                                                a.iata(),
-                                                Earth.distance(SEA_OFFICE, a.point()),
-                                                SEA_OFFICE.distance(a.point())));
-
         assertThat(nearest).isEqualTo(expected);
     }
 
@@ -151,7 +138,7 @@ public class RTreeTest {
                                                         .toBlocking()
                                                         .toIterable());
 
-        List<Airport> rs = bruteForceHaversineNearest(BLR_OFFICE, (int)Earth.circumference(), 3);
+        List<Airport> rs = bruteForceHaversineNearest(BLR_OFFICE, (int) Earth.circumference(), 3);
         assertThat(nearest).isEqualTo(rs);
         rs.forEach(a -> System.out.printf("%s\th=%f\td=%f\n",
                                           a.iata(),
@@ -178,14 +165,11 @@ public class RTreeTest {
                                             int count,
                                             BiFunction<Point, Point, Double> distanceFunction) {
         final SortedSet<Airport> all = Sets.newTreeSet((first, second) -> {
-            double d1 = distanceFunction.apply(p,
-                                               first.point()); // Geodetic.distance(p, Geodetic.latLong(first.latitude(), first.longitude()));
-            double d2 = distanceFunction.apply(p,
-                                               second.point()); // Geodetic.distance(p, Geodetic.latLong(second.latitude(), second.longitude()));
+            double d1 = distanceFunction.apply(p, first.point());
+            double d2 = distanceFunction.apply(p, second.point());
             return Double.compare(d1, d2);
         });
         all.addAll(AIRPORTS);
-
         return all.stream()
                   .filter(a -> distanceFunction.apply(p, a.point()) < maxDistance)
                   .limit(count)

@@ -14,9 +14,9 @@ public class StepOneTest {
     @Example
     public void spotCheck() {
         final Point bengaluru = Geodetic.latLong(12.9796, 77.7277);
-        final Point seattleOffice = Geodetic.latLong(47.6071, -122.3381);
+        final Point seattle = Geodetic.latLong(47.6071, -122.3381);
 
-        double distance = Earth.distance(seattleOffice, bengaluru);
+        double distance = Earth.distance(seattle, bengaluru);
         assertThat(distance).isCloseTo(12990, Offset.offset(1.0));
     }
 
@@ -25,6 +25,7 @@ public class StepOneTest {
                                                 @ForAll Point to) {
         double distance = Earth.distance(from, to);
         double halfWorldAway = Earth.circumference() / 2;
+
         assertThat(distance).isLessThanOrEqualTo(halfWorldAway)
                             .isPositive();
     }
