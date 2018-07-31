@@ -109,7 +109,7 @@ public class RTreeTest {
                                                         .toBlocking()
                                                         .toIterable());
 
-        nearest.forEach(a -> System.out.printf("index\t%s\th=%f\td=%f\n",
+        nearest.forEach(a -> System.out.printf("AIRPORT_IDX\t%s\th=%f\td=%f\n",
                                                a.iata(),
                                                Earth.distance(SEA_OFFICE, a.point()),
                                                SEA_OFFICE.distance(a.point())));
@@ -188,5 +188,60 @@ public class RTreeTest {
                   .filter(a -> p.distance(a.point()) < maxDistance)
                   .limit(count)
                   .collect(Collectors.toList());
+    }
+
+
+    RTree<Airport, Point> AIRPORT_IDX = RTree.<Airport, Point>create()
+            .add(AIRPORTS.stream()
+                         .map(a -> EntryDefault.entry(a, a.point()))
+                         .collect(Collectors.toList()));
+
+    @Example
+    public void exampleNearBengaluru() throws Exception {
+        double maxDistance = 10;
+        int resultSize = 1;
+        Point b = Geodetic.latLong(12.9796, 77.7277);
+
+        Airport blr = AIRPORT_IDX.nearest(b, maxDistance, resultSize)
+                                 .toBlocking()
+                                 .first()
+                                 .value();
+        assertThat(blr.iata()).isEqualTo("BLR");
+    }
+
+    @Example
+    public void exampleNearSeattle() {
+
+        Point sea = Geodetic.latLong(47.607148, -122.3381338);
+
+        Airport bfi = AIRPORT_IDX.nearest(sea, 10, 1)
+                                 .toBlocking()
+                                 .first()
+                                 .value();
+
+        assertThat(bfi.iata()).isEqualTo("BFI");
+    }
+    
+    @Property
+    public void nearestMatchesHaversine(@ForAll Point p) {
+        Airport bfi = AIRPORT_IDX.nearest(p, 360, 1)
+                                 .toBlocking()
+                                 .first()
+                                 .value();
+        Airport expected = haversineNearest(p, AIRPORTS);
+        assertThat(bfi).isEqualTo(expected);
+    }
+
+    private static Airport haversineNearest(Point p, List<Airport> airports) {
+        final SortedSet<Airport> all = Sets.newTreeSet((first, second) -> {
+            double d1 = Earth.distance(p, Geodetic.latLong(first.latitude(),
+                                                           first.longitude()));
+            double d2 = Earth.distance(p, Geodetic.latLong(second.latitude(),
+                                                           second.longitude()));
+            return Double.compare(d1, d2);
+        });
+        all.addAll(airports);
+
+        return all.iterator().next();
     }
 }

@@ -16,15 +16,17 @@ import java.util.Set;
 
 @AutoService(ArbitraryProvider.class)
 public class PointProvider implements ArbitraryProvider {
+
     @Override
     public boolean canProvideFor(TypeUsage targetType) {
         return targetType.isOfType(Point.class);
     }
 
     @Override
-    public Set<Arbitrary<?>> provideFor(TypeUsage targetType, SubtypeProvider subtypeProvider) {
+    public Set<Arbitrary<?>> provideFor(TypeUsage _t, SubtypeProvider _s) {
         FloatArbitrary lats = Arbitraries.floats().between(-90f, 90f);
         FloatArbitrary lons = Arbitraries.floats().between(-180f, 180f);
-        return Collections.singleton(Combinators.combine(lats, lons).as(Geodetic::latLong));
+        return Collections.singleton(Combinators.combine(lats, lons)
+                                                .as(Geodetic::latLong));
     }
 }

@@ -48,9 +48,6 @@ public class GeodeticTest {
     public void badLatLongExplodes(@ForAll float lat, @ForAll float lon) {
         assumeThat(lat).isNot(condition(f -> f >= -90 && f <= 90, "lat not in -90,90"));
         assumeThat(lon).isNot(condition(f -> f >= -180 && f <= 180, "lon not in -180,180"));
-
-        System.out.printf("%f, %f\n", lat, lon);
-
         assertThatThrownBy(() -> Geodetic.latLong(lat, lon)).isInstanceOf(IllegalArgumentException.class);
     }
 
