@@ -221,7 +221,7 @@ public class RTreeTest {
 
         assertThat(bfi.iata()).isEqualTo("BFI");
     }
-    
+
     @Property
     public void nearestMatchesHaversine(@ForAll Point p) {
         Airport bfi = AIRPORT_IDX.nearest(p, 360, 1)
